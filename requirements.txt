@@ -1,0 +1,12 @@
+# Cryptography primitives, AEAD ciphers, and optional ML-KEM support
+cryptography>=46.0.0
+# HTTP API and WebSocket chat service
+fastapi>=0.115.0
+uvicorn[standard]>=0.34.0
+# Kafka producer/consumer with idempotent producer support
+confluent-kafka>=2.8.0
+# Cloud object storage backends
+boto3>=1.35.0
+azure-storage-blob>=12.20.0
+# Multipart file upload support for FastAPI
+python-multipart>=0.0.9

@@ -1,0 +1,53 @@
+--- /home/amrit/Documents/old/vpn1/packet_manager.py	2026-08-09 19:59:29.000000000 +0530
++++ /home/amrit/Documents/vpn1/packet_manager.py	2026-08-09 22:53:10.001015729 +0530
+@@ -79,6 +79,8 @@
+         self.sock = sock
+         self.address = address
+         self.vpn_ip = ipaddress.IPv4Address(vpn_ip)
++        self.device_tag = session.device_tag
++        self.device_public_key = session.device_public_key
+         self.session = session
+         self.send_lock = threading.Lock()
+         self.stop_event = threading.Event()
+@@ -113,6 +115,7 @@
+         if self.server_ip not in self.network:
+             raise ValueError("server IP must be inside the VPN network")
+         self._peers: dict[ipaddress.IPv4Address, PeerConnection] = {}
++        self._tags: dict[str, PeerConnection] = {}
+         self._reserved: set[ipaddress.IPv4Address] = set()
+         self._lock = threading.RLock()
+ 
+@@ -131,21 +134,33 @@
+             self._reserved.discard(ipaddress.ip_address(vpn_ip))
+ 
+     def register(self, peer: PeerConnection):
++        previous = None
+         with self._lock:
+             if peer.vpn_ip not in self._reserved:
+                 raise ValueError("peer IP was not reserved")
+             self._reserved.remove(peer.vpn_ip)
+             self._peers[peer.vpn_ip] = peer
++            if peer.device_tag:
++                previous = self._tags.get(peer.device_tag)
++                self._tags[peer.device_tag] = peer
++        if previous is not None and previous is not peer:
++            previous.close()
+ 
+     def remove(self, peer: PeerConnection):
+         with self._lock:
+             if self._peers.get(peer.vpn_ip) is peer:
+                 del self._peers[peer.vpn_ip]
++            if peer.device_tag and self._tags.get(peer.device_tag) is peer:
++                del self._tags[peer.device_tag]
+ 
+     def get(self, vpn_ip: str | ipaddress.IPv4Address) -> PeerConnection | None:
+         with self._lock:
+             return self._peers.get(ipaddress.ip_address(vpn_ip))
+ 
++    def get_by_tag(self, device_tag: str) -> PeerConnection | None:
++        with self._lock:
++            return self._tags.get(device_tag)
++
+     def snapshot(self) -> list[PeerConnection]:
+         with self._lock:
+             return list(self._peers.values())

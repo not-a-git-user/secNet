@@ -1,0 +1,25 @@
+# Issue: Dropped Spoofed Source Packets
+
+## Symptoms
+The VPN server logs were getting continuously spammed with the following error message:
+`[server] dropped spoofed source 10.71.13.62 from 10.0.0.2`
+
+This indicated that the VPN client was encrypting and forwarding packets that retained its physical Wi-Fi IP address (`10.71.13.62`) instead of adopting the assigned VPN IP address (`10.0.0.2`). The server correctly dropped these to enforce anti-spoofing (BCP 38).
+
+## Root Cause
+When the VPN client establishes a connection, it configures a "full-tunnel" route (`0.0.0.0/1` and `128.0.0.0/1`) to push all outbound internet traffic into the `tun0` interface. However, two specific types of traffic were bypassing the expected VPN IP assignment:
+
+1. **Pre-existing Connections:** TCP/UDP connections that were already established *before* the VPN connected. Because Linux connection tracking (`conntrack`) remembers the state of these connections, it bypassed the Client-Side NAT (`MASQUERADE`) rule, causing packets to leak their original Wi-Fi IP into the tunnel.
+2. **Local UDP Broadcasts:** Background services (like Dropbox LAN Sync, Spotify, or mDNS) sending discovery packets to `255.255.255.255`. The Linux kernel refuses to apply Source NAT to broadcast destinations, so they also retained the physical Wi-Fi IP.
+
+## Resolution
+The issue was resolved by implementing robust, commercial-grade VPN client behaviors in `packet_manager.py`:
+
+1. **Connection State Flushing:** 
+   Added a `conntrack -F` command to `setup_client_routing`. This forcefully clears all pre-existing OS connection tracking states the moment the VPN comes up. This instantly kills hanging connections, forcing applications to immediately reconnect over the new tunnel where the `MASQUERADE` NAT rule can successfully catch and rewrite them.
+
+2. **Client-Side Egress Filtering:**
+   Added a strict egress filter inside `start_client_packet_manager`. Before a packet is encrypted and pushed to the socket, the client parses its IPv4 header. If the source IP does not match the assigned VPN IP, the packet is silently dropped on the client side. This prevents local broadcast traffic from wasting bandwidth or spamming the server logs.
+
+3. **Debug Traceability:**
+   Added conditional logging so that if the client is run with the `--debug` flag, it prints `[CLIENT DROP] spoofed source <source> -> <dest>` to clearly indicate when an invalid packet is stopped locally.
