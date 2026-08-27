@@ -60,7 +60,7 @@ def client_program():
                     "--port",
                     str(args.chat_agent_port),
                     "--origin",
-                    f"http://10.0.0.1:{args.chat_port}",
+                    f"http://10.8.0.1:{args.chat_port}",
                 ],
                 stdout=None if args.debug else subprocess.DEVNULL,
                 stderr=None if args.debug else subprocess.DEVNULL,

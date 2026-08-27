@@ -14,7 +14,6 @@ Changes in this revision:
   - WebSocket now pushes group messages as {kind: "group", group_id, message}
 """
 
-from __future__ import annotations
 
 import asyncio
 import base64
@@ -26,6 +25,11 @@ import secrets
 import threading
 import time
 import uuid
+
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, UploadFile, File, Form
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
+
 from collections import defaultdict
 from pathlib import Path
 

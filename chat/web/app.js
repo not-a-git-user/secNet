@@ -1,6 +1,16 @@
+
+const originalFetch = window.fetch;
+window.fetch = function() {
+    if (arguments[0].toString().startsWith('/api')) {
+        if (!arguments[1]) arguments[1] = {};
+        arguments[1].credentials = "same-origin";
+    }
+    return originalFetch.apply(this, arguments);
+};
+
 // secNet Chat — minimal vanilla JS client
 
-const agentBase = () => `http://127.0.0.1:${window.__agentPort || 48271}`;
+const agentBase = () => `http://127.0.0.1:${new URLSearchParams(window.location.search).get("port") || window.__agentPort || 48271}`;
 
 // State
 let me = null;
@@ -32,7 +42,7 @@ async function agent(path, body) {
 
 async function authenticate() {
   setStatus("Connecting…");
-  const cr = await fetch("/api/auth/challenge");
+  const cr = await fetch("/api/auth/challenge?port=" + (new URLSearchParams(window.location.search).get("port") || window.__agentPort || 48271));
   const challenge = await cr.json();
   if (!cr.ok) throw new Error(challenge.error || "VPN device not authenticated");
   window.__agentPort = challenge.agent_port;

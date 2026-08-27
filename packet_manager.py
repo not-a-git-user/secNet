@@ -107,7 +107,7 @@ class PeerConnection:
 class PeerRegistry:
     """Thread-safe mapping between assigned VPN addresses and peer sockets."""
 
-    def __init__(self, network: str = "10.0.0.0/24", server_ip: str = "10.0.0.1"):
+    def __init__(self, network: str = "10.8.0.0/24", server_ip: str = "10.8.0.1"):
         self.network = ipaddress.ip_network(network, strict=False)
         if self.network.version != 4:
             raise ValueError("the current TUN router supports an IPv4 VPN network")

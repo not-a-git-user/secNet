@@ -138,8 +138,8 @@ def server_program():
         default=None,
         help="outbound NAT interface (auto-detected from the default route)",
     )
-    parser.add_argument("--vpn-network", default="10.0.0.0/24")
-    parser.add_argument("--server-ip", default="10.0.0.1")
+    parser.add_argument("--vpn-network", default="10.8.0.0/24")
+    parser.add_argument("--server-ip", default="10.8.0.1")
     parser.add_argument("--chat-port", type=int, default=8080)
     parser.add_argument("--chat-agent-port", type=int, default=48271)
     parser.add_argument("--kafka-bootstrap", default=None)

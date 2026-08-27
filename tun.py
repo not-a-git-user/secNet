@@ -35,7 +35,7 @@ def create_tun(name='vpn0'):
     
     raise last_error or OSError("Could not create TUN device")
 
-def set_if_up(ifname, cidr="10.0.0.2/24", mtu=1400):
+def set_if_up(ifname, cidr="10.8.0.2/24", mtu=1400):
     subprocess.run(["ip", "addr", "add", cidr, "dev", ifname], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     subprocess.run(["ip", "link", "set", "dev", ifname, "mtu", str(mtu)], check=False)
     subprocess.run(["ip", "link", "set", "dev", ifname, "up"], check=True)
