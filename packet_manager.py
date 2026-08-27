@@ -336,7 +336,7 @@ def start_peer_packet_manager(
             destination_peer = registry.get(destination)
             if destination_peer is not None:
                 destination_peer.send_packet(packet)
-            elif destination in registry.network:
+            elif destination in registry.network and destination != registry.server_ip:
                 # An address in the VPN subnet with no registered peer is not
                 # an Internet destination and must not leak to NAT.
                 if debug_level:
