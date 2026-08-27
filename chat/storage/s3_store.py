@@ -20,15 +20,23 @@ class S3Store(ObjectStore):
     def __init__(self):
         region = os.environ.get("AWS_REGION", "us-east-1")
         self._bucket = os.environ["S3_BUCKET_NAME"]
-        self._client = boto3.client(
-            "s3",
-            region_name=region,
-            aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
-            aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
-        )
+        
+        # If keys are missing, boto3 automatically uses the EC2 instance IAM role
+        ak = os.environ.get("AWS_ACCESS_KEY_ID")
+        sk = os.environ.get("AWS_SECRET_ACCESS_KEY")
+        
+        if ak and sk:
+            self._client = boto3.client(
+                "s3",
+                region_name=region,
+                aws_access_key_id=ak,
+                aws_secret_access_key=sk,
+            )
+        else:
+            self._client = boto3.client("s3", region_name=region)
 
     def upload(self, key: str, data: bytes, metadata: dict | None = None) -> str:
-        extra: dict = {}
+        extra: dict = {"StorageClass": "ONEZONE_IA"}
         if metadata:
             # S3 metadata values must be strings
             extra["Metadata"] = {k: str(v) for k, v in metadata.items()}
